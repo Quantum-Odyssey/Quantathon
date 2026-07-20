@@ -1,66 +1,105 @@
-# Quantathon
+# Quantathon — Water Potability Classification
 
-Quantathon is a quantitative analysis project. This repository is currently under development; more details will be added as the project takes shape.
+This project addresses **Challenge 2 of Quantathon CR 2026**: predicting whether a water sample is potable from physicochemical measurements. It supports the United Nations' **Sustainable Development Goal 6 (Clean Water and Sanitation)**.
 
-## Overview
+The challenge compares a classical support vector machine (SVM) with a quantum support vector machine (QSVM) based on quantum kernels. The repository currently contains the dataset, the official challenge brief, and an initial classical SVM baseline.
 
-Add a short description of the problem this project solves, its intended users, and its main features.
+## Dataset
 
-## Getting started
+The Water Potability dataset contains **3,276 samples**, nine input features, and a binary target:
 
-### Prerequisites
+| Column | Description |
+| --- | --- |
+| `ph` | Acidity or alkalinity of the water |
+| `Hardness` | Mineral hardness |
+| `Solids` | Total dissolved solids |
+| `Chloramines` | Chloramine concentration |
+| `Sulfate` | Sulfate concentration |
+| `Conductivity` | Electrical conductivity |
+| `Organic_carbon` | Organic carbon concentration |
+| `Trihalomethanes` | Trihalomethane concentration |
+| `Turbidity` | Water clarity |
+| `Potability` | Target: `0` = non-potable, `1` = potable |
 
-List the software and tools required to run the project, for example:
+The raw data includes missing values in `ph`, `Sulfate`, and `Trihalomethanes`. The supplied baseline notebook removes incomplete rows; the challenge brief recommends median imputation by class for the final comparison.
 
-- Git
-- Your chosen programming language and version
-- Any required database or external service
+## Current baseline
 
-### Installation
+The notebook performs the following steps:
 
-1. Clone the repository:
+1. Loads the dataset and removes rows containing missing values.
+2. Splits the data into 80% training and 20% testing sets.
+3. Standardizes all features using statistics fitted on the training set.
+4. Trains an RBF-kernel SVM with `C=1.0`.
+5. Reports accuracy, precision, recall, and F1 score.
 
-   ```bash
-   git clone <repository-url>
-   cd Quantathon
-   ```
-
-2. Install the project dependencies:
-
-   ```bash
-   # Add the appropriate installation command here
-   ```
-
-3. Configure any required environment variables:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-## Usage
-
-Add the command used to run the project:
-
-```bash
-# Add the appropriate command here
-```
+The saved notebook output reports **0.67 accuracy**. This is an initial result, not yet the complete challenge baseline: the final experiment should use a stratified split, class balancing, five-fold cross-validation, hyperparameter tuning, and a confusion matrix.
 
 ## Project structure
 
-Document the main folders as they are added:
-
 ```text
 Quantathon/
+├── data/
+│   └── water_potability.csv
+├── docs/
+│   └── challenge-2-water-potability.docx
+├── notebooks/
+│   └── svm_water_potability.ipynb
 ├── README.md
-└── ...
+└── requirements.txt
 ```
 
-## Contributing
+## Getting started
 
-1. Create a branch for your change.
-2. Make and test your changes.
-3. Open a pull request with a clear description of the update.
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/Quantum-Odyssey/Quantathon.git
+cd Quantathon
+```
+
+### 2. Create a virtual environment
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+On Windows, activate it with `.venv\Scripts\activate`.
+
+### 3. Install dependencies
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+### 4. Run the notebook
+
+```bash
+jupyter notebook notebooks/svm_water_potability.ipynb
+```
+
+Run the cells from top to bottom. The notebook expects the dataset at `data/water_potability.csv`.
+
+## Challenge roadmap
+
+- Improve preprocessing with median imputation, stratification, and class balancing.
+- Tune the classical RBF SVM using five-fold cross-validation over the required `C` and `gamma` grid.
+- Report accuracy, precision, recall, F1 score, balanced accuracy, and a confusion matrix.
+- Select a balanced subset of 16–64 training samples for the quantum experiment.
+- Implement and compare quantum feature maps and precomputed quantum kernels.
+- Compare the SVM and QSVM on the same held-out test set.
+- Analyze kernel alignment, intra/inter-class similarity, eigenvalue spectrum, circuit depth, noise sensitivity, and computational cost.
+- Document limitations honestly; demonstrating quantum advantage is not required.
+
+## Quantum stack
+
+The challenge brief recommends Quantinuum tooling such as **Pytket** and **Guppy**, with access to the H2 emulator. Quantum dependencies will be added when the QSVM implementation is introduced.
+
+## Source
+
+Dataset: [Water Quality — Kaggle](https://www.kaggle.com/datasets/adityakadiwal/water-potability)
 
 ## License
 
-Add the project's license here.
+No project license has been selected yet. Review the dataset's usage terms before redistribution or publication.
