@@ -38,8 +38,6 @@ The implemented pipeline follows the Challenge methodology:
 
 ## Project structure
 
-## Project Structure
-
 ```text
 Quantathon/
 │
