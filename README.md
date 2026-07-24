@@ -104,10 +104,14 @@ On Windows, activate it with `.venv\Scripts\activate`.
 python -m pip install -r requirements.txt
 ```
 
-### 4. Run the notebook
+### 4. Run the notebooks
 
 ```bash
-jupyter notebook notebooks/svm_water_potability.ipynb
+# Classical baseline
+jupyter notebook notebooks/SVM_RBF.ipynb
+
+# Quantum experiments
+jupyter notebook notebooks/analisis_experimental_qsvm.ipynb
 ```
 
 Run the cells from top to bottom. The notebook expects the dataset at `data/water_potability.csv`.
