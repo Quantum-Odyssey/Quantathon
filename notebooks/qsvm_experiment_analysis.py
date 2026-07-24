@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from IPython.display import display
 from matplotlib.backends.backend_pdf import PdfPages
 from qiskit import transpile
 from qiskit.circuit import ParameterVector, QuantumCircuit
@@ -269,13 +270,22 @@ class QSVMExperimentAnalysis:
         )
         return compiled, int(compiled.depth()), int(two_qubit), int(compiled.size())
 
-    def save_circuits(self, slug: str, circuit: QuantumCircuit, compiled: QuantumCircuit):
+    def save_circuits(
+        self,
+        slug: str,
+        circuit: QuantumCircuit,
+        compiled: QuantumCircuit,
+        show: bool = False,
+    ):
         for suffix, item in (("circuito", circuit), ("circuito_transpilado", compiled)):
             figure = item.draw(output="mpl", fold=24, idle_wires=False)
             figure.savefig(self.output_dir / f"{slug}_{suffix}.pdf", bbox_inches="tight")
+            if show:
+                print(f"\nImagen: {slug}_{suffix}")
+                display(figure)
             plt.close(figure)
 
-    def save_table(self, frame: pd.DataFrame, filename: str):
+    def save_table(self, frame: pd.DataFrame, filename: str, show: bool = False):
         aliases = {
             "balanced_accuracy": "bal_accuracy",
             "svc_seconds": "svc_s",
@@ -318,6 +328,9 @@ class QSVMExperimentAnalysis:
             table.set_fontsize(8)
             table.scale(1, 1.25)
             pdf.savefig(figure, bbox_inches="tight")
+            if show:
+                print(f"\nImagen: {Path(filename).stem}")
+                display(figure)
             plt.close(figure)
 
         path = self.output_dir / filename
@@ -643,6 +656,8 @@ class QSVMExperimentAnalysis:
         axis.tick_params(axis="x", rotation=22)
         axis.legend(loc="upper right")
         figure.savefig(self.output_dir / filename, bbox_inches="tight")
+        print(f"\nImagen: {Path(filename).stem}")
+        display(figure)
         plt.close(figure)
 
     def sklearn_rbf_reference(self, seeds=(42, 123, 2026)):
@@ -744,6 +759,8 @@ class QSVMExperimentAnalysis:
             scalar.set_array([])
             figure.colorbar(scalar, ax=list(axes[0]), fraction=0.025, pad=0.02)
         figure.savefig(self.output_dir / filename, bbox_inches="tight")
+        print(f"\nImagen: {Path(filename).stem}")
+        display(figure)
         plt.close(figure)
 
     def save_expressive_circuit_table(self, frame: pd.DataFrame):
@@ -763,7 +780,11 @@ class QSVMExperimentAnalysis:
                 "two_qubit_gates": "compuertas_2q",
             }
         )
-        self.save_table(table, "grupo_mayor_expresividad_profundidad_compuertas_2q.pdf")
+        self.save_table(
+            table,
+            "grupo_mayor_expresividad_profundidad_compuertas_2q.pdf",
+            show=True,
+        )
 
     def save_h2_absolute_noise_heatmaps(self, config: dict):
         slug = self.slug(config)
@@ -819,6 +840,8 @@ class QSVMExperimentAnalysis:
                 self.output_dir / f"{slug}_{group}_kernel_h2_ruido_absoluto.pdf",
                 bbox_inches="tight",
             )
+            print(f"\nImagen: {slug}_{group}_kernel_h2_ruido_absoluto")
+            display(figure)
             plt.close(figure)
         return missing
 
@@ -876,7 +899,7 @@ class QSVMExperimentAnalysis:
         for _, row in expressive.iterrows():
             slug = self.slug(row.to_dict())
             original, compiled = circuits[slug]
-            self.save_circuits(slug, original, compiled)
+            self.save_circuits(slug, original, compiled, show=True)
 
         unified = pd.concat(
             [

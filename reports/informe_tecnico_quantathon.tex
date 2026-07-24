@@ -168,7 +168,7 @@ U_{\phi}(\mathbf{x}_i)|0\rangle\right|^2.
 \end{figure}
 
 \subsection{Costo}
-La simetría reduce el entrenamiento de $N^2$ a $N(N-1)/2$ circuitos, pero el crecimiento sigue siendo cuadrático; el test requiere $N_{\rm test}N$. Las cinco configuraciones expresivas tienen profundidades entre 4 y 10 y entre 0 y 2 compuertas de dos qubits.
+La simetría reduce el entrenamiento de $N^2$ a $N(N-1)/2$ circuitos, pero el crecimiento sigue siendo cuadrático; el test requiere $N_{\rm test}N$. Las cinco configuraciones expresivas tienen profundidades transpiladas entre 4 y 10 y entre 0 y 2 compuertas de dos qubits. La profundidad individual se reporta en las tablas de resultados.
 
 \subsection{Validación cruzada cuántica}
 La validación se calcula únicamente sobre la matriz de kernel de entrenamiento. Se usa \texttt{StratifiedKFold} con cinco folds, mezcla activada y semilla 42. En cada fold se ajusta una nueva \texttt{SVC} precomputada con
@@ -203,15 +203,15 @@ La Figura~\ref{fig:expressive-heatmaps} presenta exactamente una configuración 
 \centering\tiny
 \caption{Métricas almacenadas para las cinco configuraciones más expresivas. Las métricas de clasificación se calculan con \texttt{sklearn}.}
 \label{tab:expressive}
-\begin{tabular}{rrlccccc}
+\begin{tabular}{rrlcccccc}
 \toprule
-$N$ & $d$ & \textbf{Mapa} & \textbf{Expr.} & \textbf{Acc.} & \textbf{Bal. acc.} & \textbf{$F_1$} & \textbf{CV bal. $\pm$ DE}\\
+$N$ & $d$ & \textbf{Mapa} & \textbf{Expr.} & \textbf{Acc.} & \textbf{Bal. acc.} & \textbf{$F_1$} & \textbf{Prof.} & \textbf{CV bal. $\pm$ DE}\\
 \midrule
-64 & 2 & EfficientSU2 & 0.575 & 0.438 & 0.500 & 0.609 & $0.445\pm0.051$\\
-40 & 2 & Propio & 0.380 & 0.900 & 0.875 & 0.857 & $0.612\pm0.101$\\
-16 & 2 & ZZ & 0.311 & 0.750 & 0.833 & 0.667 & $0.650\pm0.200$\\
-24 & 2 & Pauli Y/ZZ & 0.293 & 0.500 & 0.625 & 0.400 & $0.433\pm0.097$\\
-72 & 2 & Z & 0.255 & 0.389 & 0.375 & 0.267 & $0.434\pm0.021$\\
+64 & 2 & EfficientSU2 & 0.575 & 0.438 & 0.500 & 0.609 & 10 & $0.445\pm0.051$\\
+40 & 2 & Propio & 0.380 & 0.900 & 0.875 & 0.857 & 6 & $0.612\pm0.101$\\
+16 & 2 & ZZ & 0.311 & 0.750 & 0.833 & 0.667 & 7 & $0.650\pm0.200$\\
+24 & 2 & Pauli Y/ZZ & 0.293 & 0.500 & 0.625 & 0.400 & 9 & $0.433\pm0.097$\\
+72 & 2 & Z & 0.255 & 0.389 & 0.375 & 0.267 & 4 & $0.434\pm0.021$\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -239,15 +239,15 @@ Para no seleccionar únicamente los mejores resultados globales, la Figura~\ref{
 \centering\tiny
 \caption{Mejor resultado aislado por tipo de mapa.}
 \label{tab:best}
-\begin{tabular}{rrlccccc}
+\begin{tabular}{rrlcccccc}
 \toprule
-$N$ & $d$ & \textbf{Mapa} & \textbf{Expr.} & \textbf{Acc.} & \textbf{Bal. acc.} & \textbf{$F_1$} & \textbf{CV bal. $\pm$ DE}\\
+$N$ & $d$ & \textbf{Mapa} & \textbf{Expr.} & \textbf{Acc.} & \textbf{Bal. acc.} & \textbf{$F_1$} & \textbf{Prof.} & \textbf{CV bal. $\pm$ DE}\\
 \midrule
-48 & 4 & Propio & 0.161 & 0.917 & 0.900 & 0.889 & $0.555\pm0.098$\\
-16 & 2 & ZZ & 0.311 & 0.750 & 0.833 & 0.667 & $0.650\pm0.200$\\
-24 & 2 & Pauli Y/ZZ & 0.293 & 0.500 & 0.625 & 0.400 & $0.433\pm0.097$\\
-64 & 2 & EfficientSU2 & 0.575 & 0.438 & 0.500 & 0.609 & $0.445\pm0.051$\\
-72 & 2 & Z & 0.255 & 0.389 & 0.375 & 0.267 & $0.434\pm0.021$\\
+48 & 4 & Propio & 0.161 & 0.917 & 0.900 & 0.889 & 25 & $0.555\pm0.098$\\
+16 & 2 & ZZ & 0.311 & 0.750 & 0.833 & 0.667 & 7 & $0.650\pm0.200$\\
+24 & 2 & Pauli Y/ZZ & 0.293 & 0.500 & 0.625 & 0.400 & 9 & $0.433\pm0.097$\\
+64 & 2 & EfficientSU2 & 0.575 & 0.438 & 0.500 & 0.609 & 10 & $0.445\pm0.051$\\
+72 & 2 & Z & 0.255 & 0.389 & 0.375 & 0.267 & 4 & $0.434\pm0.021$\\
 \bottomrule
 \end{tabular}
 \end{table}
