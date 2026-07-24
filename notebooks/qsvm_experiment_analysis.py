@@ -20,9 +20,12 @@ from qiskit.circuit.library import (
     zz_feature_map,
 )
 from qiskit.quantum_info import Statevector
+from imblearn.over_sampling import SMOTE
+from imblearn.pipeline import Pipeline as ImbPipeline
 from sklearn.decomposition import PCA
+from sklearn.impute import SimpleImputer
 from sklearn.metrics import accuracy_score, balanced_accuracy_score, f1_score
-from sklearn.model_selection import StratifiedKFold, train_test_split
+from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_split
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.svm import SVC
 
@@ -607,3 +610,284 @@ class QSVMExperimentAnalysis:
         summary.to_csv(self.output_dir / "resumen_todas_combinaciones.csv", index=False)
         missing_h2 = self.h2_comparison(h2_config)
         return summary, missing_h2
+
+    @staticmethod
+    def _short_label(row):
+        if row["featuremap"] == "SVM_RBF_sklearn":
+            return "SVM-RBF sklearn"
+        return f"n{row['N']}_d{row['dim']}_{row['featuremap']}"
+
+    def save_group_metrics(
+        self, frame: pd.DataFrame, sklearn_reference: pd.DataFrame, filename: str
+    ):
+        metric_columns = [
+            "expressivity",
+            "accuracy",
+            "balanced_accuracy",
+            "f1",
+            "cv_balanced_accuracy",
+        ]
+        plot_frame = pd.concat([frame.copy(), sklearn_reference.copy()], ignore_index=True)
+        plot_frame["combinación"] = plot_frame.apply(self._short_label, axis=1)
+        long = plot_frame.melt(
+            id_vars="combinación",
+            value_vars=metric_columns,
+            var_name="Métrica",
+            value_name="Valor",
+        )
+        figure, axis = plt.subplots(figsize=(10, 5))
+        sns.barplot(data=long, x="combinación", y="Valor", hue="Métrica", ax=axis)
+        axis.set_ylim(0, 1)
+        axis.set_xlabel("")
+        axis.set_ylabel("Valor")
+        axis.tick_params(axis="x", rotation=22)
+        axis.legend(loc="upper right")
+        figure.savefig(self.output_dir / filename, bbox_inches="tight")
+        plt.close(figure)
+
+    def sklearn_rbf_reference(self, seeds=(42, 123, 2026)):
+        data = pd.read_csv(self.data_path)
+        features = [column for column in data.columns if column != "Potability"]
+        x = data[features]
+        y = data["Potability"].astype(int)
+        rows = []
+
+        for seed in seeds:
+            x_train, x_test, y_train, y_test = train_test_split(
+                x,
+                y,
+                test_size=0.2,
+                stratify=y,
+                random_state=seed,
+            )
+            pipeline = ImbPipeline(
+                steps=[
+                    ("imputer", SimpleImputer(strategy="median")),
+                    ("scaler", StandardScaler()),
+                    ("smote", SMOTE(random_state=seed)),
+                    ("classifier", SVC(kernel="rbf", random_state=seed)),
+                ]
+            )
+            cross_validation = StratifiedKFold(
+                n_splits=5, shuffle=True, random_state=seed
+            )
+            search = GridSearchCV(
+                estimator=pipeline,
+                param_grid={
+                    "classifier__C": [0.1, 1, 10],
+                    "classifier__gamma": ["scale", "auto", 0.01],
+                },
+                scoring={
+                    "accuracy": "accuracy",
+                    "balanced_accuracy": "balanced_accuracy",
+                    "f1": "f1",
+                },
+                refit="f1",
+                cv=cross_validation,
+                n_jobs=-1,
+            )
+            search.fit(x_train, y_train)
+            predictions = search.best_estimator_.predict(x_test)
+            best_index = search.best_index_
+            rows.append(
+                {
+                    "seed": seed,
+                    "accuracy": accuracy_score(y_test, predictions),
+                    "balanced_accuracy": balanced_accuracy_score(y_test, predictions),
+                    "f1": f1_score(y_test, predictions, zero_division=0),
+                    "cv_balanced_accuracy": search.cv_results_[
+                        "mean_test_balanced_accuracy"
+                    ][best_index],
+                    "best_C": search.best_params_["classifier__C"],
+                    "best_gamma": search.best_params_["classifier__gamma"],
+                }
+            )
+
+        seed_results = pd.DataFrame(rows)
+        reference = {
+            "N": len(data),
+            "dim": len(features),
+            "featuremap": "SVM_RBF_sklearn",
+            "expressivity": np.nan,
+        }
+        for metric in (
+            "accuracy",
+            "balanced_accuracy",
+            "f1",
+            "cv_balanced_accuracy",
+        ):
+            reference[metric] = float(seed_results[metric].mean())
+            reference[f"{metric}_std"] = float(seed_results[metric].std(ddof=1))
+        reference["circuit_depth"] = np.nan
+        reference["two_qubit_gates"] = np.nan
+        return pd.DataFrame([reference]), seed_results
+
+    def save_group_heatmaps(self, rows: pd.DataFrame, bundles: dict, filename: str):
+        count = len(rows)
+        figure, axes = plt.subplots(1, count, figsize=(5.2 * count, 4.8), squeeze=False)
+        image = None
+        for axis, (_, row) in zip(axes[0], rows.iterrows()):
+            slug = self.slug(row.to_dict())
+            image = sns.heatmap(
+                bundles[slug].train,
+                cmap="viridis",
+                vmin=0,
+                vmax=1,
+                square=True,
+                cbar=False,
+                ax=axis,
+            )
+            axis.set_xlabel(self._short_label(row))
+            axis.set_ylabel("Muestra")
+        if image is not None:
+            scalar = plt.cm.ScalarMappable(cmap="viridis", norm=plt.Normalize(0, 1))
+            scalar.set_array([])
+            figure.colorbar(scalar, ax=list(axes[0]), fraction=0.025, pad=0.02)
+        figure.savefig(self.output_dir / filename, bbox_inches="tight")
+        plt.close(figure)
+
+    def save_expressive_circuit_table(self, frame: pd.DataFrame):
+        table = frame[
+            [
+                "N",
+                "dim",
+                "featuremap",
+                "expressivity",
+                "circuit_depth",
+                "two_qubit_gates",
+            ]
+        ].rename(
+            columns={
+                "expressivity": "expresividad",
+                "circuit_depth": "profundidad",
+                "two_qubit_gates": "compuertas_2q",
+            }
+        )
+        self.save_table(table, "grupo_mayor_expresividad_profundidad_compuertas_2q.pdf")
+
+    def save_h2_absolute_noise_heatmaps(self, config: dict):
+        slug = self.slug(config)
+        ideal_bundle, _, _ = self.generate_bundle(config)
+        pairs = (
+            (
+                "entrenamiento",
+                ideal_bundle.train,
+                self.repo_root / "data" / "kernel_h2" / f"{slug}.csv",
+            ),
+            (
+                "prueba",
+                ideal_bundle.test,
+                self.repo_root / "data" / "test_h2" / f"{slug}.csv",
+            ),
+        )
+        missing = []
+        for group, ideal, h2_path in pairs:
+            if not h2_path.exists():
+                missing.append(str(h2_path))
+                continue
+            h2 = self.load_matrix(h2_path)
+            if ideal.shape != h2.shape:
+                raise ValueError(
+                    f"Formas incompatibles para {slug} ({group}): "
+                    f"{ideal.shape} y {h2.shape}"
+                )
+            absolute_difference = np.abs(h2 - ideal)
+
+            figure, axes = plt.subplots(1, 3, figsize=(16, 4.8))
+            matrices = (ideal, h2, absolute_difference)
+            labels = (
+                f"{group} kernel ideal",
+                f"{group} kernel H2",
+                f"{group} |H2 - ideal|",
+            )
+            for axis, matrix, label in zip(axes, matrices, labels):
+                sns.heatmap(
+                    matrix,
+                    cmap="viridis",
+                    vmin=0,
+                    vmax=1,
+                    square=True,
+                    cbar=False,
+                    ax=axis,
+                )
+                axis.set_xlabel(label)
+                axis.set_ylabel("Muestra")
+            scalar = plt.cm.ScalarMappable(cmap="viridis", norm=plt.Normalize(0, 1))
+            scalar.set_array([])
+            figure.colorbar(scalar, ax=list(axes), fraction=0.025, pad=0.02)
+            figure.savefig(
+                self.output_dir / f"{slug}_{group}_kernel_h2_ruido_absoluto.pdf",
+                bbox_inches="tight",
+            )
+            plt.close(figure)
+        return missing
+
+    def run_focused(self, combinations: list[dict], h2_config: dict, top_k: int = 3):
+        rows = []
+        bundles = {}
+        circuits = {}
+
+        for config in combinations:
+            slug = self.slug(config)
+            print(f"Procesando {slug}")
+            bundle, y_train, y_test = self.generate_bundle(config)
+            metrics = self.classification_metrics(bundle, y_train, y_test)
+            cv_mean, _ = self.cross_validation(bundle.train, y_train)
+            compiled, depth, two_qubit, _ = self.circuit_cost(bundle.circuit)
+            rows.append(
+                {
+                    **config,
+                    "expressivity": float(np.mean(bundle.train)),
+                    "accuracy": metrics["accuracy"],
+                    "balanced_accuracy": metrics["balanced_accuracy"],
+                    "f1": metrics["f1"],
+                    "cv_balanced_accuracy": cv_mean,
+                    "circuit_depth": depth,
+                    "two_qubit_gates": two_qubit,
+                }
+            )
+            bundles[slug] = bundle
+            circuits[slug] = (bundle.circuit, compiled)
+
+        results = pd.DataFrame(rows)
+        top_k = min(top_k, len(results))
+        expressive = results.nlargest(top_k, "expressivity").reset_index(drop=True)
+        accurate = results.nlargest(top_k, "accuracy").reset_index(drop=True)
+        sklearn_reference, sklearn_by_seed = self.sklearn_rbf_reference()
+
+        self.save_group_metrics(
+            expressive,
+            sklearn_reference,
+            "grupo_mayor_expresividad_metricas_vs_sklearn.pdf",
+        )
+        self.save_group_metrics(
+            accurate,
+            sklearn_reference,
+            "grupo_mayor_accuracy_metricas_vs_sklearn.pdf",
+        )
+        self.save_group_heatmaps(
+            expressive, bundles, "grupo_mayor_expresividad_heatmaps_escala_0_1.pdf"
+        )
+        self.save_group_heatmaps(
+            accurate, bundles, "grupo_mayor_accuracy_heatmaps_escala_0_1.pdf"
+        )
+        self.save_expressive_circuit_table(expressive)
+
+        for _, row in expressive.iterrows():
+            slug = self.slug(row.to_dict())
+            original, compiled = circuits[slug]
+            self.save_circuits(slug, original, compiled)
+
+        unified = pd.concat(
+            [
+                results.assign(modelo="QSVM"),
+                sklearn_reference.assign(modelo="SVM clásica"),
+            ],
+            ignore_index=True,
+        )
+        unified.to_csv(self.output_dir / "resultados_qsvm_vs_sklearn.csv", index=False)
+        sklearn_by_seed.to_csv(
+            self.output_dir / "resultados_sklearn_por_semilla.csv", index=False
+        )
+        missing_h2 = self.save_h2_absolute_noise_heatmaps(h2_config)
+        return results, expressive, accurate, sklearn_reference, missing_h2
