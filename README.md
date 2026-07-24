@@ -23,17 +23,18 @@ The Water Potability dataset contains **3,276 samples**, nine input features, an
 
 The raw data includes missing values in `ph`, `Sulfate`, and `Trihalomethanes`. The supplied baseline notebook removes incomplete rows; the challenge brief recommends median imputation by class for the final comparison.
 
-## Current baseline
+## Classical Machine Learning Pipeline
 
-The notebook performs the following steps:
+The implemented pipeline follows the Challenge methodology:
 
-1. Loads the dataset and removes rows containing missing values.
-2. Splits the data into 80% training and 20% testing sets.
-3. Standardizes all features using statistics fitted on the training set.
-4. Trains an RBF-kernel SVM with `C=1.0`.
-5. Reports accuracy, precision, recall, and F1 score.
-
-The saved notebook output reports **0.67 accuracy**. This is an initial result, not yet the complete challenge baseline: the final experiment should use a stratified split, class balancing, five-fold cross-validation, hyperparameter tuning, and a confusion matrix.
+- Exploratory Data Analysis (EDA)
+- Stratified 80/20 train-test split
+- Median imputation by class for missing values
+- Feature standardization (StandardScaler)
+- Class balancing with SMOTE
+- Data leakage validation
+- SVM with RBF kernel
+- Hyperparameter tuning using **GridSearchCV (5-fold cross-validation)**
 
 ## Project structure
 
@@ -44,7 +45,7 @@ Quantathon/
 ├── docs/
 │   └── challenge-2-water-potability.docx
 ├── notebooks/
-│   └── svm_water_potability.ipynb
+│   └── SVM_RBF.ipynb
 ├── README.md
 └── requirements.txt
 ```
