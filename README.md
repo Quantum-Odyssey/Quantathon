@@ -129,7 +129,7 @@ Run the cells from top to bottom. The notebook expects the dataset at `data/wate
 
 ## Quantum stack
 
-The challenge brief recommends Quantinuum tooling such as **Pytket** and **Guppy**, with access to the H2 emulator. Quantum dependencies will be added when the QSVM implementation is introduced.
+The Quantum Stack utilized was **qiskit**, as proviciency with its capabilities was adquired during the bootcamp.
 
 ## Source
 
