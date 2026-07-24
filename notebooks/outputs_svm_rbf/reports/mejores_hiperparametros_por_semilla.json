@@ -1,0 +1,14 @@
+{
+  "42": {
+    "classifier__C": 1,
+    "classifier__gamma": "auto"
+  },
+  "123": {
+    "classifier__C": 1,
+    "classifier__gamma": "auto"
+  },
+  "2026": {
+    "classifier__C": 1,
+    "classifier__gamma": "scale"
+  }
+}

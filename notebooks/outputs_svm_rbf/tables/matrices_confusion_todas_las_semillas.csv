@@ -1,0 +1,7 @@
+seed,clase_real,pred_no_potable,pred_potable
+42,No potable,268,132
+42,Potable,121,135
+123,No potable,248,152
+123,Potable,105,151
+2026,No potable,245,155
+2026,Potable,98,158

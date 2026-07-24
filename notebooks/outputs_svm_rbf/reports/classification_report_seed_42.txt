@@ -1,0 +1,8 @@
+              precision    recall  f1-score   support
+
+  No potable     0.6889    0.6700    0.6793       400
+     Potable     0.5056    0.5273    0.5163       256
+
+    accuracy                         0.6143       656
+   macro avg     0.5973    0.5987    0.5978       656
+weighted avg     0.6174    0.6143    0.6157       656
