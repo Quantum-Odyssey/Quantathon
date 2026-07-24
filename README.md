@@ -23,28 +23,59 @@ The Water Potability dataset contains **3,276 samples**, nine input features, an
 
 The raw data includes missing values in `ph`, `Sulfate`, and `Trihalomethanes`. The supplied baseline notebook removes incomplete rows; the challenge brief recommends median imputation by class for the final comparison.
 
-## Current baseline
+## Classical Machine Learning Pipeline
 
-The notebook performs the following steps:
+The implemented pipeline follows the Challenge methodology:
 
-1. Loads the dataset and removes rows containing missing values.
-2. Splits the data into 80% training and 20% testing sets.
-3. Standardizes all features using statistics fitted on the training set.
-4. Trains an RBF-kernel SVM with `C=1.0`.
-5. Reports accuracy, precision, recall, and F1 score.
-
-The saved notebook output reports **0.67 accuracy**. This is an initial result, not yet the complete challenge baseline: the final experiment should use a stratified split, class balancing, five-fold cross-validation, hyperparameter tuning, and a confusion matrix.
+- Exploratory Data Analysis (EDA)
+- Stratified 80/20 train-test split
+- Median imputation by class for missing values
+- Feature standardization (StandardScaler)
+- Class balancing with SMOTE
+- Data leakage validation
+- SVM with RBF kernel
+- Hyperparameter tuning using **GridSearchCV (5-fold cross-validation)**
 
 ## Project structure
 
 ```text
 Quantathon/
+│
 ├── data/
-│   └── water_potability.csv
+│   ├── water_potability.csv
+│   ├── kernel/
+│   │   ├── n_24_dim_2_z_feature_map.csv
+│   │   └── ...
+│   ├── kernel_h2/
+│   ├── test/
+│   └── test_h2/
+│
 ├── docs/
+│   ├── challenge-2-water-potability.pdf
 │   └── challenge-2-water-potability.docx
+│
+├── img/
+│   ├── kernel heatmaps
+│   ├── circuit figures
+│   ├── evaluation plots
+│   └── experimental results
+│
 ├── notebooks/
-│   └── svm_water_potability.ipynb
+│   ├── SVM_RBF.ipynb
+│   ├── qsvm.ipynb
+│   ├── qsvm nexus.ipynb
+│   ├── analisis_experimental_qsvm.ipynb
+│   └── heatmaps_kernel_vs_h2.ipynb
+│
+├── output/
+│   └── pdf/
+│       └── informe_tecnico_quantathon.pdf
+│
+├── reports/
+│   ├── generate_figures.py
+│   ├── informe_tecnico_quantathon.tex
+│   └── references.bib
+│
 ├── README.md
 └── requirements.txt
 ```
@@ -73,10 +104,14 @@ On Windows, activate it with `.venv\Scripts\activate`.
 python -m pip install -r requirements.txt
 ```
 
-### 4. Run the notebook
+### 4. Run the notebooks
 
 ```bash
-jupyter notebook notebooks/svm_water_potability.ipynb
+# Classical baseline
+jupyter notebook notebooks/SVM_RBF.ipynb
+
+# Quantum experiments
+jupyter notebook notebooks/analisis_experimental_qsvm.ipynb
 ```
 
 Run the cells from top to bottom. The notebook expects the dataset at `data/water_potability.csv`.
