@@ -38,14 +38,46 @@ The implemented pipeline follows the Challenge methodology:
 
 ## Project structure
 
+## Project Structure
+
 ```text
 Quantathon/
+│
 ├── data/
-│   └── water_potability.csv
+│   ├── water_potability.csv
+│   ├── kernel/
+│   │   ├── n_24_dim_2_z_feature_map.csv
+│   │   └── ...
+│   ├── kernel_h2/
+│   ├── test/
+│   └── test_h2/
+│
 ├── docs/
+│   ├── challenge-2-water-potability.pdf
 │   └── challenge-2-water-potability.docx
+│
+├── img/
+│   ├── kernel heatmaps
+│   ├── circuit figures
+│   ├── evaluation plots
+│   └── experimental results
+│
 ├── notebooks/
-│   └── SVM_RBF.ipynb
+│   ├── SVM_RBF.ipynb
+│   ├── qsvm.ipynb
+│   ├── qsvm nexus.ipynb
+│   ├── analisis_experimental_qsvm.ipynb
+│   └── heatmaps_kernel_vs_h2.ipynb
+│
+├── output/
+│   └── pdf/
+│       └── informe_tecnico_quantathon.pdf
+│
+├── reports/
+│   ├── generate_figures.py
+│   ├── informe_tecnico_quantathon.tex
+│   └── references.bib
+│
 ├── README.md
 └── requirements.txt
 ```
